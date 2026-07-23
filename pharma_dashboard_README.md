@@ -8,7 +8,7 @@ A live interactive HTML mockup is included so the dashboard can be explored dire
 
 ## Live demo
 
-Open `pharma_dashboard_mockup.html` in any browser to interact with the full dashboard — all five pages, charts, tables, and navigation are fully functional.
+Open `file:///C:/Users/User/Downloads/pharma_dashboard_mockup%20(1).html` in any browser to interact with the full dashboard — all five pages, charts, tables, and navigation are fully functional.
 
 ---
 
@@ -16,7 +16,7 @@ Open `pharma_dashboard_mockup.html` in any browser to interact with the full das
 
 Pharmaceutical distributors manage thousands of product batches across multiple warehouses. Without a unified analytical view, inventory teams cannot reliably answer:
 
-- Which batches are expiring in the next 30–90 days — and what is the financial write-off exposure?
+- Which batches are expiring in the next 30–90 days  and what is the financial write-off exposure?
 - Which products are about to stock out, and is a purchase order already in progress?
 - Which suppliers are consistently late, and how much capital is tied up in their delays?
 - Which products have not moved in over 60 days?
