@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharma Inventory Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#F8F4EE;--stone:#EDE6DB;
+  --burg:#6B1E2E;--burg-lt:#8C2D40;--burg-pale:#F2E8EB;
+  --sage:#7A9E7E;--sage-pale:#EAF2EB;
+  --amber:#C47A2B;--amber-pale:#FBF1E2;
+  --red:#B53B3B;--red-pale:#FAEBEB;
+  --ink:#2C1F24;--ink2:#5C4A52;--ink3:#8C7A82;
+  --border:#D6CBBC;--white:#FFFFFF;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--stone);color:var(--ink);display:flex;height:100vh;overflow:hidden;font-size:13px}
+
+/* SIDEBAR */
+.sidebar{width:205px;min-width:205px;background:var(--burg);display:flex;flex-direction:column;z-index:10}
+.sb-brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.12)}
+.sb-logo{width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:16px;font-weight:bold;color:#fff;margin-bottom:9px}
+.sb-brand h1{font-family:Georgia,serif;font-size:12.5px;font-weight:normal;color:rgba(255,255,255,0.92);line-height:1.45}
+.sb-brand p{font-size:10px;color:rgba(255,255,255,0.38);margin-top:3px;letter-spacing:0.6px;text-transform:uppercase}
+.sb-nav{flex:1;padding:10px 0}
+.sb-section{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.32);padding:14px 16px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:10px 16px;cursor:pointer;color:rgba(255,255,255,0.58);font-size:12px;border-left:3px solid transparent;transition:all 0.15s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:#fff}
+.nav-item.active{background:rgba(255,255,255,0.13);color:#fff;border-left-color:rgba(255,255,255,0.72)}
+.sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.1);font-size:10px;color:rgba(255,255,255,0.3)}
+.sb-footer strong{color:rgba(255,255,255,0.52);display:block;margin-bottom:2px}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--cream)}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-family:Georgia,serif;font-size:16px;color:var(--burg);font-weight:normal}
+.page-sub{font-size:11px;color:var(--ink3);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.chip{background:var(--stone);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--ink2);cursor:pointer}
+.chip:hover{border-color:var(--burg);color:var(--burg)}
+.btn-r{background:var(--burg);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;cursor:pointer;font-family:inherit}
+.btn-r:hover{background:var(--burg-lt)}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:18px 22px}
+.page{display:none}.page.active{display:block}
+
+/* GRIDS */
+.kpi-row{display:grid;gap:12px;margin-bottom:15px}
+.c4{grid-template-columns:repeat(4,1fr)}
+.c3{grid-template-columns:repeat(3,1fr)}
+.c2{grid-template-columns:repeat(2,1fr)}
+.chart-row{display:grid;gap:12px;margin-bottom:15px}
+.s6040{grid-template-columns:3fr 2fr}
+.s5050{grid-template-columns:1fr 1fr}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:15px 17px}
+.card-label{font-size:10px;letter-spacing:0.6px;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+.card-value{font-family:Georgia,serif;font-size:27px;color:var(--ink);line-height:1;margin-bottom:3px}
+.card-sub{font-size:11px;color:var(--ink3)}
+.badge{display:inline-block;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px}
+.br{background:var(--red-pale);color:var(--red)}
+.ba{background:var(--amber-pale);color:var(--amber)}
+.bg{background:var(--sage-pale);color:var(--sage)}
+.bb{background:var(--burg-pale);color:var(--burg)}
+.kpi-card{position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:10px 0 0 10px}
+.ar::after{background:var(--red)}.aa::after{background:var(--amber)}.ag::after{background:var(--sage)}.ab::after{background:var(--burg)}
+
+/* SECTION */
+.sec-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.sec-title{font-family:Georgia,serif;font-size:14px;color:var(--burg);font-weight:normal}
+.sec-link{font-size:11px;color:var(--burg);cursor:pointer;text-decoration:underline;opacity:0.7}
+
+/* ALERT */
+.alert-strip{background:var(--red-pale);border:1px solid #E8BEBE;border-radius:8px;padding:9px 14px;display:flex;align-items:center;gap:9px;margin-bottom:15px;font-size:12px;color:var(--red)}
+
+/* TABLE */
+.dt{width:100%;border-collapse:collapse;font-size:11.5px}
+.dt th{text-align:left;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink3);padding:0 9px 9px;border-bottom:1px solid var(--border);font-weight:600}
+.dt td{padding:8px 9px;border-bottom:1px solid var(--stone);color:var(--ink);vertical-align:middle}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--cream)}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:3px;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600}
+.pr{background:var(--red-pale);color:var(--red)}
+.pa{background:var(--amber-pale);color:var(--amber)}
+.pg{background:var(--sage-pale);color:var(--sage)}
+.pgy{background:var(--stone);color:var(--ink2)}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.dr{background:var(--red)}.da{background:var(--amber)}.dg{background:var(--sage)}
+
+/* WAREHOUSE */
+.wh-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:15px}
+.wh-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.wh-name{font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:3px}
+.wh-city{font-size:10px;color:var(--ink3);margin-bottom:8px}
+.wh-val{font-family:Georgia,serif;font-size:18px;color:var(--ink)}
+.wh-lbl{font-size:10px;color:var(--ink3);margin-top:1px;margin-bottom:8px}
+
+/* SUPPLIER BARS */
+.sup-row{margin-bottom:13px}
+.sup-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px}
+.sup-bg{background:var(--stone);border-radius:4px;height:8px}
+.sup-fill{height:8px;border-radius:4px;transition:width 0.8s ease}
+
+/* SVG CHARTS */
+.chart-wrap{width:100%;overflow:hidden}
+svg.chart{width:100%;display:block}
+.axis-label{font-size:10px;fill:var(--ink3)}
+.axis-line{stroke:var(--border);stroke-width:1}
+.grid-line{stroke:#EDE6DB;stroke-width:1}
+.bar-label{font-size:9.5px;fill:var(--ink3)}
+.value-label{font-size:9px;font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">Rx</div>
+    <h1>Pharma Inventory Intelligence</h1>
+    <p>Analytics Dashboard</p>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('overview',this)">&#9670;&nbsp; Executive Summary</div>
+    <div class="sb-section">Risk Monitoring</div>
+    <div class="nav-item" onclick="showPage('expiry',this)">&#8987;&nbsp; Expiry Risk</div>
+    <div class="nav-item" onclick="showPage('stockout',this)">&#9888;&nbsp; Stockout Alerts</div>
+    <div class="sb-section">Performance</div>
+    <div class="nav-item" onclick="showPage('supplier',this)">&#9711;&nbsp; Supplier Scorecard</div>
+    <div class="nav-item" onclick="showPage('deadstock',this)">&#9645;&nbsp; Dead Stock</div>
+  </div>
+  <div class="sb-footer"><strong>Last refreshed</strong>Nov 5, 2024 &mdash; 08:00 AM</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Executive Summary</div>
+      <div class="page-sub">Pharmaceutical Inventory &middot; All Warehouses &middot; Nov 2024</div>
+    </div>
+    <div class="topbar-right">
+      <div class="chip">&#9636; All Categories</div>
+      <div class="chip">&#9636; All Warehouses</div>
+      <button class="btn-r">&#8635; Refresh</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- ═══ PAGE: OVERVIEW ═══ -->
+  <div class="page active" id="page-overview">
+    <div class="alert-strip">
+      <span style="font-size:16px">&#9873;</span>
+      <span><strong>3 critical alerts require immediate action:</strong>&nbsp; 2 batches expired &middot; 1 stockout in Berlin &middot; BioVantage Ltd has 2 undelivered orders totalling &euro;6,637</span>
+    </div>
+    <div class="kpi-row c4">
+      <div class="card kpi-card ab"><div class="card-label">Total inventory value</div><div class="card-value">&euro;184,320</div><div class="card-sub">5 warehouses &middot; 15 batches</div></div>
+      <div class="card kpi-card ar"><div class="card-label">Batches expiring &le;90 days</div><div class="card-value">6 <span class="badge br">2 expired</span></div><div class="card-sub">&euro;41,200 at risk of write-off</div></div>
+      <div class="card kpi-card aa"><div class="card-label">Products below reorder point</div><div class="card-value">5 <span class="badge ba">1 stockout</span></div><div class="card-sub">Immediate procurement action needed</div></div>
+      <div class="card kpi-card ag"><div class="card-label">Supplier on-time rate</div><div class="card-value">62%</div><div class="card-sub">2 of 5 suppliers rated poor</div></div>
+    </div>
+    <div class="chart-row s6040">
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px">Inventory value by category (&euro;000s)</div>
+        <div id="chart-catbar"></div>
+      </div>
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px">Stock status distribution</div>
+        <div id="chart-statusdonut"></div>
+      </div>
+    </div>
+    <div class="sec-hdr"><div class="sec-title">Warehouse snapshot</div></div>
+    <div class="wh-grid">
+      <div class="wh-card"><div class="wh-name">Paris Central</div><div class="wh-city">Paris, France</div><div class="wh-val">&euro;98,400</div><div class="wh-lbl">stock value</div><span class="pill pg"><span class="dot dg"></span>Healthy</span></div>
+      <div class="wh-card"><div class="wh-name">Lyon Regional</div><div class="wh-city">Lyon, France</div><div class="wh-val">&euro;4,890</div><div class="wh-lbl">stock value</div><span class="pill pr"><span class="dot dr"></span>Low stock</span></div>
+      <div class="wh-card"><div class="wh-name">Berlin Medical</div><div class="wh-city">Berlin, Germany</div><div class="wh-val">&euro;12,360</div><div class="wh-lbl">stock value</div><span class="pill pa"><span class="dot da"></span>Watch</span></div>
+      <div class="wh-card"><div class="wh-name">Madrid Dist.</div><div class="wh-city">Madrid, Spain</div><div class="wh-val">&euro;30,470</div><div class="wh-lbl">stock value</div><span class="pill pg"><span class="dot dg"></span>Healthy</span></div>
+      <div class="wh-card"><div class="wh-name">Amsterdam Cold</div><div class="wh-city">Amsterdam, NL</div><div class="wh-val">&euro;38,200</div><div class="wh-lbl">stock value</div><span class="pill pr"><span class="dot dr"></span>Critical</span></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-title">Stock movements &mdash; last 30 days</div></div>
+    <div class="card"><div id="chart-moveline"></div></div>
+  </div>
+
+  <!-- ═══ PAGE: EXPIRY ═══ -->
+  <div class="page" id="page-expiry">
+    <div class="kpi-row c4">
+      <div class="card kpi-card ar"><div class="card-label">Expired batches</div><div class="card-value">2</div><div class="card-sub">&euro;34,533 immediate write-off</div></div>
+      <div class="card kpi-card ar"><div class="card-label">Expiring &le;30 days</div><div class="card-value">2</div><div class="card-sub">&euro;1,144 at critical risk</div></div>
+      <div class="card kpi-card aa"><div class="card-label">Expiring 31&ndash;60 days</div><div class="card-value">1</div><div class="card-sub">&euro;408 &mdash; plan dispatch</div></div>
+      <div class="card kpi-card ag"><div class="card-label">Expiring 61&ndash;90 days</div><div class="card-value">1</div><div class="card-sub">&euro;504 &mdash; monitor</div></div>
+    </div>
+    <div class="chart-row s5050">
+      <div class="card"><div class="card-label" style="margin-bottom:12px">At-risk value by urgency (&euro;)</div><div id="chart-expirybar"></div></div>
+      <div class="card"><div class="card-label" style="margin-bottom:12px">At-risk stock by category</div><div id="chart-expirycat"></div></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-title">Expiry risk &mdash; batch detail</div><span class="sec-link">Export to CSV &rarr;</span></div>
+    <div class="card">
+      <table class="dt">
+        <thead><tr><th>Product</th><th>Category</th><th>Batch</th><th>Warehouse</th><th>Qty</th><th>Expiry</th><th>Days left</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Insulin Glargine 100U/mL</strong></td><td>Diabetes</td><td>BATCH-H8002</td><td>Paris Central</td><td>1,800</td><td>2025-03-01</td><td style="color:var(--red);font-weight:600">&minus;30</td><td>&euro;33,300</td><td><span class="pill pr">Expired</span></td></tr>
+          <tr><td><strong>Paracetamol 500mg</strong></td><td>Analgesics</td><td>BATCH-B2001</td><td>Paris Central</td><td>9,800</td><td>2025-01-10</td><td style="color:var(--red);font-weight:600">&minus;3</td><td>&euro;392</td><td><span class="pill pr">Expired</span></td></tr>
+          <tr><td><strong>Salbutamol 100mcg Inhaler</strong></td><td>Respiratory</td><td>BATCH-G7001</td><td>Amsterdam Cold</td><td>130</td><td>2025-03-31</td><td style="color:var(--red);font-weight:600">15</td><td>&euro;312</td><td><span class="pill pr">Critical</span></td></tr>
+          <tr><td><strong>Insulin Glargine 100U/mL</strong></td><td>Diabetes</td><td>BATCH-H8001</td><td>Amsterdam Cold</td><td>45</td><td>2025-01-15</td><td style="color:var(--red);font-weight:600">10</td><td>&euro;832</td><td><span class="pill pr">Critical</span></td></tr>
+          <tr><td><strong>Hepatitis B Vaccine</strong></td><td>Vaccines</td><td>BATCH-J0001</td><td>Amsterdam Cold</td><td>60</td><td>2025-07-01</td><td style="color:var(--amber);font-weight:600">52</td><td>&euro;408</td><td><span class="pill pa">High</span></td></tr>
+          <tr><td><strong>Amoxicillin 500mg</strong></td><td>Antibiotics</td><td>BATCH-A1001</td><td>Paris Central</td><td>4,200</td><td>2025-06-01</td><td style="color:var(--amber);font-weight:600">83</td><td>&euro;504</td><td><span class="pill pa">Medium</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: STOCKOUT ═══ -->
+  <div class="page" id="page-stockout">
+    <div class="kpi-row c4">
+      <div class="card kpi-card ar"><div class="card-label">Active stockouts</div><div class="card-value">1</div><div class="card-sub">Paracetamol &middot; Berlin</div></div>
+      <div class="card kpi-card ar"><div class="card-label">Below reorder &mdash; no PO</div><div class="card-value">3</div><div class="card-sub">Immediate procurement needed</div></div>
+      <div class="card kpi-card aa"><div class="card-label">Below reorder &mdash; PO in flight</div><div class="card-value">2</div><div class="card-sub">Monitor delivery progress</div></div>
+      <div class="card kpi-card ag"><div class="card-label">Avg days stock remaining</div><div class="card-value">18</div><div class="card-sub">Across at-risk products</div></div>
+    </div>
+    <div class="chart-row s6040">
+      <div class="card"><div class="card-label" style="margin-bottom:12px">Days of stock remaining (at-risk products)</div><div id="chart-daysstock"></div></div>
+      <div class="card"><div class="card-label" style="margin-bottom:12px">Stock status split</div><div id="chart-reorderdonut"></div></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-title">Reorder alert detail</div><span class="sec-link">Raise PO &rarr;</span></div>
+    <div class="card">
+      <table class="dt">
+        <thead><tr><th>Product</th><th>Warehouse</th><th>On hand</th><th>Reorder point</th><th>Reorder qty</th><th>Days left</th><th>PO status</th><th>Alert</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Paracetamol 500mg</strong></td><td>Berlin Medical</td><td style="color:var(--red);font-weight:600">80</td><td>2,000</td><td>5,000</td><td style="color:var(--red);font-weight:600">0</td><td><span class="pill pgy">None</span></td><td><span class="pill pr">Stockout</span></td></tr>
+          <tr><td><strong>Paracetamol 500mg</strong></td><td>Madrid Dist.</td><td style="color:var(--red);font-weight:600">20</td><td>2,000</td><td>5,000</td><td style="color:var(--red);font-weight:600">1</td><td><span class="pill pgy">None</span></td><td><span class="pill pr">Below reorder</span></td></tr>
+          <tr><td><strong>Salbutamol Inhaler</strong></td><td>Amsterdam Cold</td><td style="color:var(--red);font-weight:600">130</td><td>300</td><td>1,000</td><td style="color:var(--red);font-weight:600">6</td><td><span class="pill pgy">None</span></td><td><span class="pill pr">Below reorder</span></td></tr>
+          <tr><td><strong>Insulin Glargine</strong></td><td>Amsterdam Cold</td><td style="color:var(--amber);font-weight:600">45</td><td>100</td><td>300</td><td style="color:var(--amber);font-weight:600">9</td><td><span class="pill pa">Delayed</span></td><td><span class="pill pa">PO in progress</span></td></tr>
+          <tr><td><strong>Hepatitis B Vaccine</strong></td><td>Amsterdam Cold</td><td style="color:var(--amber);font-weight:600">60</td><td>200</td><td>500</td><td style="color:var(--amber);font-weight:600">14</td><td><span class="pill pa">Delayed</span></td><td><span class="pill pa">PO in progress</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: SUPPLIER ═══ -->
+  <div class="page" id="page-supplier">
+    <div class="kpi-row c4">
+      <div class="card kpi-card ag"><div class="card-label">Excellent suppliers</div><div class="card-value">2</div><div class="card-sub">&ge;95% on-time delivery</div></div>
+      <div class="card kpi-card aa"><div class="card-label">Needs improvement</div><div class="card-value">1</div><div class="card-sub">MedSource Iberia &mdash; 50%</div></div>
+      <div class="card kpi-card ar"><div class="card-label">Poor performing</div><div class="card-value">1</div><div class="card-sub">BioVantage &mdash; 0% on time</div></div>
+      <div class="card kpi-card ab"><div class="card-label">Capital at risk</div><div class="card-value">&euro;6,637</div><div class="card-sub">Across 2 delayed POs</div></div>
+    </div>
+    <div class="chart-row s6040">
+      <div class="card" style="padding:16px">
+        <div class="card-label" style="margin-bottom:16px">On-time delivery rate by supplier</div>
+        <div class="sup-row"><div class="sup-hdr"><span><strong>PharmaLink Europe</strong> <span style="color:var(--ink3);font-size:11px">France</span></span><div style="display:flex;align-items:center;gap:8px"><strong style="color:var(--sage)">100%</strong><span class="pill pg">Excellent</span></div></div><div class="sup-bg"><div class="sup-fill" style="width:100%;background:var(--sage)"></div></div></div>
+        <div class="sup-row"><div class="sup-hdr"><span><strong>Repharm Laboratories</strong> <span style="color:var(--ink3);font-size:11px">Germany</span></span><div style="display:flex;align-items:center;gap:8px"><strong style="color:var(--sage)">100%</strong><span class="pill pg">Excellent</span></div></div><div class="sup-bg"><div class="sup-fill" style="width:100%;background:var(--sage)"></div></div></div>
+        <div class="sup-row"><div class="sup-hdr"><span><strong>Afrique Pharma Dist.</strong> <span style="color:var(--ink3);font-size:11px">Morocco</span></span><div style="display:flex;align-items:center;gap:8px"><strong style="color:var(--ink3)">N/A</strong><span class="pill pgy">Pending</span></div></div><div class="sup-bg"><div class="sup-fill" style="width:0%;background:var(--ink3)"></div></div></div>
+        <div class="sup-row"><div class="sup-hdr"><span><strong>MedSource Iberia</strong> <span style="color:var(--ink3);font-size:11px">Spain</span></span><div style="display:flex;align-items:center;gap:8px"><strong style="color:var(--amber)">50%</strong><span class="pill pa">Review</span></div></div><div class="sup-bg"><div class="sup-fill" style="width:50%;background:var(--amber)"></div></div></div>
+        <div class="sup-row"><div class="sup-hdr"><span><strong>BioVantage Ltd</strong> <span style="color:var(--ink3);font-size:11px">UK</span></span><div style="display:flex;align-items:center;gap:8px"><strong style="color:var(--red)">0%</strong><span class="pill pr">Poor</span></div></div><div class="sup-bg"><div class="sup-fill" style="width:0%;background:var(--red)"></div></div></div>
+      </div>
+      <div class="card"><div class="card-label" style="margin-bottom:12px">Value at risk by supplier (&euro;)</div><div id="chart-suprisk"></div></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-title">Purchase order detail</div></div>
+    <div class="card">
+      <table class="dt">
+        <thead><tr><th>PO ID</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Expected</th><th>Actual</th><th>Delay</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>PO-20004</td><td>BioVantage Ltd</td><td>Insulin Glargine</td><td>300</td><td>Oct 3</td><td style="color:var(--red)">Not delivered</td><td style="color:var(--red);font-weight:600">33+ days</td><td>&euro;5,400</td><td><span class="pill pr">Delayed</span></td></tr>
+          <tr><td>PO-20008</td><td>BioVantage Ltd</td><td>Hepatitis B Vaccine</td><td>500</td><td>Oct 28</td><td style="color:var(--red)">Not delivered</td><td style="color:var(--red);font-weight:600">7+ days</td><td>&euro;3,375</td><td><span class="pill pr">Delayed</span></td></tr>
+          <tr><td>PO-20003</td><td>MedSource Iberia</td><td>Salbutamol Inhaler</td><td>1,000</td><td>Sep 22</td><td>Oct 10</td><td style="color:var(--amber);font-weight:600">18 days</td><td>&euro;2,350</td><td><span class="pill pg">Delivered</span></td></tr>
+          <tr><td>PO-20007</td><td>MedSource Iberia</td><td>Omeprazole 20mg</td><td>2,500</td><td>Oct 26</td><td>Nov 8</td><td style="color:var(--amber);font-weight:600">13 days</td><td>&euro;325</td><td><span class="pill pg">Delivered</span></td></tr>
+          <tr><td>PO-20002</td><td>PharmaLink Europe</td><td>Paracetamol 500mg</td><td>8,000</td><td>Aug 20</td><td>Aug 22</td><td style="color:var(--amber);font-weight:600">2 days</td><td>&euro;320</td><td><span class="pill pg">Delivered</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: DEAD STOCK ═══ -->
+  <div class="page" id="page-deadstock">
+    <div class="kpi-row c4">
+      <div class="card kpi-card ar"><div class="card-label">Dead stock batches</div><div class="card-value">2</div><div class="card-sub">No movement recorded</div></div>
+      <div class="card kpi-card aa"><div class="card-label">Slow-moving (60+ days)</div><div class="card-value">3</div><div class="card-sub">No dispatch in 60+ days</div></div>
+      <div class="card kpi-card ab"><div class="card-label">Capital tied up</div><div class="card-value">&euro;38,540</div><div class="card-sub">Dead + slow-moving stock</div></div>
+      <div class="card kpi-card ag"><div class="card-label">Transfer opportunities</div><div class="card-value">3</div><div class="card-sub">Cross-warehouse rebalancing</div></div>
+    </div>
+    <div class="chart-row s5050">
+      <div class="card"><div class="card-label" style="margin-bottom:12px">Dead stock value by category (&euro;)</div><div id="chart-deadcat"></div></div>
+      <div class="card"><div class="card-label" style="margin-bottom:12px">Days since last dispatch</div><div id="chart-deaddays"></div></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-title">Dead and slow-moving stock detail</div><span class="sec-link">Plan write-off &rarr;</span></div>
+    <div class="card">
+      <table class="dt">
+        <thead><tr><th>Product</th><th>Category</th><th>Warehouse</th><th>Qty</th><th>Last dispatch</th><th>Days idle</th><th>Units out (90d)</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Insulin Glargine Pen</strong></td><td>Diabetes</td><td>Paris Central</td><td>1,800</td><td>&mdash;</td><td style="color:var(--red);font-weight:600">No record</td><td>0</td><td>&euro;33,300</td><td><span class="pill pr">Dead stock</span></td></tr>
+          <tr><td><strong>Atorvastatin 20mg</strong></td><td>Cardiovascular</td><td>Madrid Dist.</td><td>1,200</td><td>&mdash;</td><td style="color:var(--red);font-weight:600">No record</td><td>0</td><td>&euro;216</td><td><span class="pill pr">Dead stock</span></td></tr>
+          <tr><td><strong>Amoxicillin 500mg</strong></td><td>Antibiotics</td><td>Madrid Dist.</td><td>6,800</td><td>Oct 30</td><td style="color:var(--amber);font-weight:600">36</td><td>100</td><td>&euro;816</td><td><span class="pill pa">Slow moving</span></td></tr>
+          <tr><td><strong>Omeprazole 20mg</strong></td><td>Gastrology</td><td>Berlin Medical</td><td>950</td><td>&mdash;</td><td style="color:var(--amber);font-weight:600">No dispatch</td><td>0</td><td>&euro;133</td><td><span class="pill pa">Slow moving</span></td></tr>
+          <tr><td><strong>Ciprofloxacin 500mg</strong></td><td>Antibiotics</td><td>Paris Central</td><td>3,300</td><td>Oct 18</td><td style="color:var(--amber);font-weight:600">48</td><td>400</td><td>&euro;726</td><td><span class="pill pa">Watch</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── PURE SVG CHART ENGINE (no external dependencies) ──────────────────
+var COLORS={burg:'#6B1E2E',burglt:'#8C2D40',sage:'#7A9E7E',amber:'#C47A2B',red:'#B53B3B',ink3:'#8C7A82',stone:'#EDE6DB',a1:'#A3364A',a2:'#BD4D62',a3:'#D07080',a4:'#E0929E'};
+
+function svgEl(tag,attrs){
+  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(var k in attrs) el.setAttribute(k,attrs[k]);
+  return el;
+}
+
+function barChart(containerId,labels,values,colors,opts){
+  opts=opts||{};
+  var W=opts.W||520,H=opts.H||200,ml=opts.ml||90,mr=opts.mr||20,mt=opts.mt||10,mb=opts.mb||30;
+  var cW=W-ml-mr, cH=H-mt-mb;
+  var max=Math.max.apply(null,values)*1.15||1;
+  var bW=Math.min(38,cW/labels.length*0.6);
+  var gap=(cW-bW*labels.length)/(labels.length+1);
+
+  var svg=svgEl('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'display:block'});
+
+  // grid lines (4)
+  for(var g=0;g<=4;g++){
+    var yy=mt+cH-(cH*g/4);
+    svg.appendChild(svgEl('line',{x1:ml,y1:yy,x2:ml+cW,y2:yy,stroke:'#EDE6DB','stroke-width':'1'}));
+    var v=Math.round(max*g/4);
+    var t=svgEl('text',{x:ml-5,y:yy+4,'text-anchor':'end','font-size':'9','fill':'#8C7A82'});
+    t.textContent=opts.euro?'€'+v.toLocaleString():v;
+    svg.appendChild(t);
+  }
+  // axis
+  svg.appendChild(svgEl('line',{x1:ml,y1:mt,x2:ml,y2:mt+cH,stroke:'#D6CBBC','stroke-width':'1'}));
+  svg.appendChild(svgEl('line',{x1:ml,y1:mt+cH,x2:ml+cW,y2:mt+cH,stroke:'#D6CBBC','stroke-width':'1'}));
+
+  labels.forEach(function(lbl,i){
+    var x=ml+gap+(bW+gap)*i;
+    var bH=Math.max(2,(values[i]/max)*cH);
+    var y=mt+cH-bH;
+    var col=Array.isArray(colors)?colors[i]:colors;
+    // bar
+    var rect=svgEl('rect',{x:x,y:y,width:bW,height:bH,fill:col,rx:'3'});
+    svg.appendChild(rect);
+    // value on top
+    var vt=svgEl('text',{x:x+bW/2,y:y-4,'text-anchor':'middle','font-size':'9','font-weight':'600','fill':col});
+    vt.textContent=opts.euro?'€'+values[i].toLocaleString():values[i];
+    svg.appendChild(vt);
+    // label
+    var words=lbl.split(' '),lineH=11,startY=mt+cH+14;
+    if(words.length<=2){
+      var lt=svgEl('text',{x:x+bW/2,y:startY,'text-anchor':'middle','font-size':'9','fill':'#8C7A82'});
+      lt.textContent=lbl;
+      svg.appendChild(lt);
+    } else {
+      var mid=Math.ceil(words.length/2);
+      [words.slice(0,mid).join(' '),words.slice(mid).join(' ')].forEach(function(line,li){
+        var lt=svgEl('text',{x:x+bW/2,y:startY+li*lineH,'text-anchor':'middle','font-size':'9','fill':'#8C7A82'});
+        lt.textContent=line;
+        svg.appendChild(lt);
+      });
+    }
+  });
+
+  var wrap=document.getElementById(containerId);
+  if(wrap) wrap.appendChild(svg);
+}
+
+function hBarChart(containerId,labels,values,colors,opts){
+  opts=opts||{};
+  var W=opts.W||520,rowH=opts.rowH||32,ml=opts.ml||130,mr=opts.mr||70,mt=opts.mt||8;
+  var H=mt+labels.length*rowH+10;
+  var cW=W-ml-mr;
+  var max=Math.max.apply(null,values)*1.15||1;
+  var svg=svgEl('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'display:block'});
+
+  // grid
+  for(var g=0;g<=4;g++){
+    var xx=ml+cW*g/4;
+    svg.appendChild(svgEl('line',{x1:xx,y1:mt,x2:xx,y2:H-10,stroke:'#EDE6DB','stroke-width':'1'}));
+    var v=Math.round(max*g/4);
+    var t=svgEl('text',{x:xx,y:H-2,'text-anchor':'middle','font-size':'9','fill':'#8C7A82'});
+    t.textContent=opts.euro?'€'+v.toLocaleString():v;
+    svg.appendChild(t);
+  }
+  svg.appendChild(svgEl('line',{x1:ml,y1:mt,x2:ml,y2:H-10,stroke:'#D6CBBC','stroke-width':'1'}));
+
+  labels.forEach(function(lbl,i){
+    var y=mt+i*rowH;
+    var bW=Math.max(2,(values[i]/max)*cW);
+    var col=Array.isArray(colors)?colors[i]:colors;
+    // label
+    var lt=svgEl('text',{x:ml-6,y:y+rowH/2+4,'text-anchor':'end','font-size':'10','fill':'#2C1F24'});
+    lt.textContent=lbl;
+    svg.appendChild(lt);
+    // bar
+    svg.appendChild(svgEl('rect',{x:ml,y:y+4,width:bW,height:rowH-10,fill:col,rx:'3'}));
+    // value
+    var vt=svgEl('text',{x:ml+bW+5,y:y+rowH/2+4,'font-size':'10','font-weight':'600','fill':col});
+    vt.textContent=opts.euro?'€'+values[i].toLocaleString():values[i];
+    svg.appendChild(vt);
+  });
+
+  var wrap=document.getElementById(containerId);
+  if(wrap) wrap.appendChild(svg);
+}
+
+function donutChart(containerId,labels,values,colors){
+  var W=260,H=220,cx=110,cy=105,R=80,r=52;
+  var total=values.reduce(function(a,b){return a+b},0);
+  var svg=svgEl('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'display:block'});
+  var angle=-Math.PI/2;
+
+  values.forEach(function(v,i){
+    var slice=2*Math.PI*v/total;
+    var x1=cx+R*Math.cos(angle), y1=cy+R*Math.sin(angle);
+    var x2=cx+R*Math.cos(angle+slice), y2=cy+R*Math.sin(angle+slice);
+    var x3=cx+r*Math.cos(angle+slice), y3=cy+r*Math.sin(angle+slice);
+    var x4=cx+r*Math.cos(angle), y4=cy+r*Math.sin(angle);
+    var large=slice>Math.PI?1:0;
+    var d='M'+x1+','+y1+' A'+R+','+R+' 0 '+large+',1 '+x2+','+y2+' L'+x3+','+y3+' A'+r+','+r+' 0 '+large+',0 '+x4+','+y4+' Z';
+    svg.appendChild(svgEl('path',{d:d,fill:colors[i],'stroke':'#fff','stroke-width':'2'}));
+    angle+=slice;
+  });
+
+  // centre text
+  var ct=svgEl('text',{x:cx,y:cy-6,'text-anchor':'middle','font-size':'20','font-family':'Georgia,serif','fill':'#2C1F24','font-weight':'bold'});
+  ct.textContent=values.reduce(function(a,b){return a+b},0);
+  svg.appendChild(ct);
+  var cs=svgEl('text',{x:cx,y:cy+14,'text-anchor':'middle','font-size':'9','fill':'#8C7A82'});
+  cs.textContent='total batches';
+  svg.appendChild(cs);
+
+  // legend
+  var lx=200,ly=30;
+  labels.forEach(function(lbl,i){
+    svg.appendChild(svgEl('rect',{x:lx,y:ly+i*22,width:10,height:10,fill:colors[i],rx:'2'}));
+    var lt=svgEl('text',{x:lx+14,y:ly+i*22+9,'font-size':'9.5','fill':'#5C4A52'});
+    lt.textContent=lbl+' ('+values[i]+')';
+    svg.appendChild(lt);
+  });
+
+  var wrap=document.getElementById(containerId);
+  if(wrap) wrap.appendChild(svg);
+}
+
+function lineChart(containerId,labels,datasets){
+  var W=640,H=150,ml=40,mr=15,mt=15,mb=28;
+  var cW=W-ml-mr, cH=H-mt-mb;
+  var allV=[];
+  datasets.forEach(function(d){allV=allV.concat(d.data)});
+  var max=Math.max.apply(null,allV)*1.2||1;
+  var svg=svgEl('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'display:block'});
+
+  // grid
+  for(var g=0;g<=3;g++){
+    var yy=mt+cH-cH*g/3;
+    svg.appendChild(svgEl('line',{x1:ml,y1:yy,x2:ml+cW,y2:yy,stroke:'#EDE6DB','stroke-width':'1'}));
+    var t=svgEl('text',{x:ml-4,y:yy+3,'text-anchor':'end','font-size':'8','fill':'#8C7A82'});
+    t.textContent=Math.round(max*g/3);
+    svg.appendChild(t);
+  }
+  svg.appendChild(svgEl('line',{x1:ml,y1:mt,x2:ml,y2:mt+cH,stroke:'#D6CBBC','stroke-width':'1'}));
+  svg.appendChild(svgEl('line',{x1:ml,y1:mt+cH,x2:ml+cW,y2:mt+cH,stroke:'#D6CBBC','stroke-width':'1'}));
+
+  var step=cW/(labels.length-1);
+
+  datasets.forEach(function(ds){
+    var pts=ds.data.map(function(v,i){return{x:ml+i*step,y:mt+cH-(v/max)*cH}});
+    // fill
+    var fp='M'+pts[0].x+','+(mt+cH);
+    pts.forEach(function(p){fp+=' L'+p.x+','+p.y});
+    fp+=' L'+pts[pts.length-1].x+','+(mt+cH)+' Z';
+    var fill=svgEl('path',{d:fp,fill:ds.color,'fill-opacity':'0.1','stroke':'none'});
+    svg.appendChild(fill);
+    // line
+    var lp='M'+pts.map(function(p){return p.x+','+p.y}).join(' L');
+    svg.appendChild(svgEl('path',{d:lp,fill:'none',stroke:ds.color,'stroke-width':'2','stroke-linejoin':'round'}));
+    // dots
+    pts.forEach(function(p){
+      if(ds.data[pts.indexOf(p)]>0)
+        svg.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r:'3',fill:ds.color}));
+    });
+  });
+
+  // x labels (every other)
+  labels.forEach(function(lbl,i){
+    if(i%2===0){
+      var t=svgEl('text',{x:ml+i*step,y:mt+cH+14,'text-anchor':'middle','font-size':'8','fill':'#8C7A82'});
+      t.textContent=lbl;
+      svg.appendChild(t);
+    }
+  });
+
+  // legend
+  var lx=ml,ly=4;
+  datasets.forEach(function(ds,i){
+    var ox=lx+i*110;
+    svg.appendChild(svgEl('line',{x1:ox,y1:ly+5,x2:ox+18,y2:ly+5,stroke:ds.color,'stroke-width':'2'}));
+    svg.appendChild(svgEl('circle',{cx:ox+9,cy:ly+5,r:'3',fill:ds.color}));
+    var t=svgEl('text',{x:ox+22,y:ly+9,'font-size':'9','fill':'#5C4A52'});
+    t.textContent=ds.label;
+    svg.appendChild(t);
+  });
+
+  var wrap=document.getElementById(containerId);
+  if(wrap) wrap.appendChild(svg);
+}
+
+// ── RENDER ALL CHARTS ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',function(){
+
+  // Overview: category bar
+  barChart('chart-catbar',
+    ['Diabetes','Analgesics','Antibiotics','Respiratory','Cardiovascular','Vaccines','Gastrology'],
+    [34100,390,10200,6300,2160,4100,130],
+    [COLORS.burg,COLORS.burglt,COLORS.a1,COLORS.a2,COLORS.a3,COLORS.a4,COLORS.sage],
+    {H:180,ml:50,euro:true}
+  );
+
+  // Overview: status donut
+  donutChart('chart-statusdonut',
+    ['Healthy','Watch','Low stock','Critical'],
+    [6,3,4,2],
+    [COLORS.sage,COLORS.amber,COLORS.a3,COLORS.red]
+  );
+
+  // Overview: movement line
+  lineChart('chart-moveline',
+    ['Oct 1','Oct 5','Oct 8','Oct 10','Oct 12','Oct 14','Oct 15','Oct 18','Oct 20','Oct 22','Oct 25','Oct 28','Oct 30','Nov 2'],
+    [
+      {label:'Outbound',data:[500,0,950,180,40,30,300,400,800,200,200,60,100,150],color:COLORS.burg},
+      {label:'Inbound', data:[0,0,0,0,0,0,0,0,2000,0,0,0,0,0],color:COLORS.sage}
+    ]
+  );
+
+  // Expiry: urgency horizontal bar
+  hBarChart('chart-expirybar',
+    ['Expired','Critical (30d)','High (60d)','Medium (90d)'],
+    [33692,1144,408,504],
+    [COLORS.red,'#C44A4A',COLORS.amber,'#D4A042'],
+    {H:160,rowH:36,ml:110,euro:true}
+  );
+
+  // Expiry: category donut
+  donutChart('chart-expirycat',
+    ['Diabetes','Analgesics','Respiratory','Vaccines','Antibiotics'],
+    [34132,392,312,408,504],
+    [COLORS.burg,COLORS.burglt,COLORS.amber,COLORS.sage,COLORS.red]
+  );
+
+  // Stockout: days remaining bar
+  barChart('chart-daysstock',
+    ['Paracetamol Berlin','Paracetamol Madrid','Salbutamol Amsterdam','Insulin Amsterdam','Hep B Amsterdam'],
+    [0,1,6,9,14],
+    [COLORS.red,COLORS.red,COLORS.red,COLORS.amber,COLORS.amber],
+    {H:180,ml:50}
+  );
+
+  // Stockout: reorder donut
+  donutChart('chart-reorderdonut',
+    ['Stockout','Below reorder','PO in flight','Adequate'],
+    [1,3,2,9],
+    [COLORS.red,COLORS.burg,COLORS.amber,COLORS.sage]
+  );
+
+  // Supplier: value at risk horizontal bar
+  hBarChart('chart-suprisk',
+    ['BioVantage Ltd','MedSource Iberia','Afrique Pharma','PharmaLink Europe','Repharm Labs'],
+    [6637,0,270,0,0],
+    [COLORS.red,COLORS.sage,COLORS.amber,COLORS.sage,COLORS.sage],
+    {rowH:36,ml:130,euro:true}
+  );
+
+  // Dead stock: category bar
+  barChart('chart-deadcat',
+    ['Diabetes','Antibiotics','Gastrology','Cardiovascular'],
+    [33300,1542,133,216],
+    [COLORS.burg,COLORS.burglt,COLORS.amber,COLORS.red],
+    {H:180,ml:60,euro:true}
+  );
+
+  // Dead stock: days idle bar
+  barChart('chart-deaddays',
+    ['Insulin (Paris)','Atorvastatin (Madrid)','Omeprazole (Berlin)','Ciprofloxacin (Paris)','Amoxicillin (Madrid)'],
+    [90,90,75,48,36],
+    [COLORS.red,COLORS.red,COLORS.amber,COLORS.amber,'#D4A042'],
+    {H:180,ml:50}
+  );
+});
+
+// ── NAVIGATION ───────────────────────────────────────────────────────
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  var t={overview:'Executive Summary',expiry:'Expiry Risk',stockout:'Stockout Alerts',supplier:'Supplier Scorecard',deadstock:'Dead Stock & Capital'};
+  document.getElementById('pageTitle').textContent=t[id];
+}
+</script>
+</body>
+</html>
