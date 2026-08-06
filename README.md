@@ -1,6 +1,6 @@
 # Pharmaceutical Inventory Management — Power BI Dashboard
 
-An interactive, multi-page inventory analytics dashboard designed for pharmaceutical distributors. Built to surface critical operational intelligence across five key areas — expiry risk, stockout alerts, supplier performance, dead stock, and executive overview — in a clean, clinical design.
+An interactive, multi-page inventory analytics dashboard designed for pharmaceutical distributors. Built to surface critical operational intelligence across five key areas, expiry risk, stockout alerts, supplier performance, dead stock, and executive overview — in a clean, clinical design.
 
 A live interactive HTML mockup is included so the dashboard can be explored directly in any browser without Power BI installed.
 
