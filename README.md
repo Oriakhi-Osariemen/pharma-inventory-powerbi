@@ -5,10 +5,7 @@ An interactive, multi-page inventory analytics dashboard designed for pharmaceut
 A live interactive HTML mockup is included so the dashboard can be explored directly in any browser without Power BI installed.
 
 ---
-
-## Live demo
-
-Open `file:///C:/Users/User/Downloads/pharma_dashboard_mockup%20(1).html` in any browser to interact with the full dashboard — all five pages, charts, tables, and navigation are fully functional.
+**[▶ Live interactive demo](https://oriakhi-osariemen.github.io/pharma-inventory-powerbi/)**
 
 ---
 
